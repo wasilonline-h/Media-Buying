@@ -198,14 +198,14 @@
         /* --- DESKTOP ZOOM LOGIC --- */
         @media (min-width: 1024px) {
             .glass-card {
-                /* The Request: 115% Zoom */
-                transform: scale(1.15);
+                /* The Request: 122% Zoom */
+                transform: scale(1.22);
                 
                 /* Compensation: 
-                   If we scale 1.4, a 100% width card becomes 140% wide (overflow).
+                   If we scale 1.22, a 100% width card becomes 122% wide (overflow).
                    We reduce base width to ~65-70% so 70 * 1.4 = ~98% of screen.
                 */
-                width: 75%; 
+                width: 70%; 
                 
                 /* Compensation:
                    Prevent vertical clipping. 
