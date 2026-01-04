@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Digital Campus - Performance Media</title>
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        /* --- CSS VARIABLES & TOKENS --- */
+        :root {
+            /* Typography */
+            --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+            
+            /* Dark Mode (Default) */
+            --bg-base: #000000;
+            --bg-gradient-1: #0f172a;
+            --bg-gradient-2: #1e1b4b;
+            --bg-gradient-3: #172554;
+            
+            --glass-surface: rgba(30, 41, 59, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-accent: #38bdf8; /* Cyan */
+            --accent-primary: #38bdf8;
+            --accent-secondary: #818cf8; /* Indigo */
+            --accent-success: #34d399;
+            --accent-warn: #fbbf24;
+
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            
+            --transition-smooth: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Light Mode Override */
+        [data-theme="light"] {
+            --bg-base: #f8fafc;
+            --bg-gradient-1: #e2e8f0;
+            --bg-gradient-2: #cbd5e1;
+            --bg-gradient-3: #f1f5f9;
+            
+            --glass-surface: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-highlight: rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 8px 32px 0 rgba(148, 163, 184, 0.15);
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-accent: #0284c7;
+            --accent-primary: #0284c7;
+        }
+
+        /* --- GLOBAL RESET --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            overflow: hidden; /* App-like feel */
+            height: 100vh;
+            width: 100vw;
+            transition: background-color 0.5s ease;
+        }
+
+        /* --- ANIMATED BACKGROUND --- */
+        .ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 50%, var(--bg-gradient-2), transparent 25%), 
+                radial-gradient(circle at 85% 30%, var(--bg-gradient-3), transparent 25%);
+            background-size: 100% 100%;
+            filter: blur(60px);
+            opacity: 0.8;
+            animation: breathe 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* --- HEADER & NAV --- */
+        .app-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.01); /* Mostly transparent */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .header-left { display: flex; align-items: center; }
+        
+        /* UPDATED LOGO STYLE: Increased size, no text */
+        .logo-img { 
+            height: 40px; /* Slightly larger for visibility */
+            width: auto; 
+            object-fit: contain; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .header-controls { display: flex; align-items: center; gap: 16px; }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 50%;
+            transition: var(--transition-smooth);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background: var(--glass-highlight); }
+        .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        /* --- COPYRIGHT FIXED --- */
+        .fixed-copyright {
+            position: fixed;
+            bottom: 24px;
+            left: 30px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0.6;
+            z-index: 90;
+            font-family: var(--font-main);
+            pointer-events: none; /* Let clicks pass through */
+        }
+
+        /* --- MAIN SLIDE CONTAINER --- */
+        .deck-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95) translateY(20px);
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px 60px; /* Space for header/footer */
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* --- GLASS CARD LAYOUT --- */
+        .glass-card {
+            background: var(--glass-surface);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 1100px;
+            max-height: 85vh;
+            overflow-y: auto; /* Allow scroll inside card if content is long */
+            padding: 48px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* Hide scrollbar for clean look */
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+        }
+        .glass-card::-webkit-scrollbar { display: none; }
+
+        .slide-content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2 Column Layout default */
+            gap: 48px;
+            height: 100%;
+            align-items: center;
+        }
+        
+        .col-full { grid-column: span 2; text-align: center; }
+        .col-text { display: flex; flex-direction: column; justify-content: center; }
+        .col-visual { display: flex; align-items: center; justify-content: center; position: relative; }
+
+        /* --- TYPOGRAPHY --- */
+        h1 { font-family: var(--font-display); font-size: 3.5rem; line-height: 1.1; margin-bottom: 16px; background: linear-gradient(135deg, var(--text-primary), var(--text-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-family: var(--font-display); font-size: 2.25rem; margin-bottom: 24px; color: var(--text-primary); }
+        h3 { font-size: 1.5rem; margin-bottom: 16px; color: var(--text-accent); }
+        h4 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; color: var(--text-secondary); font-weight: 600; }
+        p { font-size: 1.1rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; }
+        
+        ul { list-style: none; }
+        li { margin-bottom: 12px; position: relative; padding-left: 24px; color: var(--text-primary); font-size: 1.05rem; }
+        li::before {
+            content: "•"; color: var(--accent-primary); font-weight: bold; font-size: 1.5rem;
+            position: absolute; left: 0; top: -4px;
+        }
+
+        /* --- WATERMARK --- */
+        .slide-watermark {
+            position: absolute;
+            bottom: 20px; right: 20px;
+            opacity: 0.03;
+            width: 180px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- COMPONENTS --- */
+        .pill {
+            display: inline-block; padding: 6px 16px;
+            border-radius: 50px; background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-primary); font-size: 0.85rem; font-weight: 600;
+            margin-bottom: 16px; border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 24px; border-radius: var(--radius-md);
+            text-align: center; transition: transform 0.3s ease;
+        }
+        .stat-box:hover { transform: translateY(-5px); background: rgba(255,255,255,0.07); }
+        .stat-val { font-size: 2rem; font-weight: 800; color: var(--accent-primary); display: block; margin-bottom: 4px; }
+        .stat-lbl { font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; }
+
+        .price-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; }
+        .price-table th { text-align: left; color: var(--text-accent); padding: 12px; border-bottom: 1px solid var(--glass-border); }
+        .price-table td { padding: 12px; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .price-table tr:last-child td { border-bottom: none; }
+
+        /* --- VISUAL ELEMENTS (CSS SHAPES) --- */
+        .visual-circle {
+            width: 300px; height: 300px; border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary));
+            filter: blur(40px); opacity: 0.3; position: absolute;
+        }
+        .visual-card-stack {
+            position: relative; width: 300px; height: 200px;
+        }
+        .v-card {
+            width: 100%; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 1px solid var(--glass-border); border-radius: 16px;
+            position: absolute; top: 0; left: 0; backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--text-secondary);
+        }
+        .v-card:nth-child(1) { transform: rotate(-5deg) translateY(-10px); z-index: 1; }
+        .v-card:nth-child(2) { transform: rotate(0deg); z-index: 2; background: rgba(56, 189, 248, 0.1); color: var(--accent-primary); border-color: var(--accent-primary); }
+        .v-card:nth-child(3) { transform: rotate(5deg) translateY(10px); z-index: 3; }
+
+        /* --- NAVIGATION FOOTER --- */
+        .nav-footer {
+            position: fixed; bottom: 20px; left: 0; right: 0;
+            display: flex; justify-content: center; align-items: center; gap: 20px;
+            z-index: 100;
+        }
+        .progress-dots { display: flex; gap: 8px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary); opacity: 0.3; transition: all 0.3s; }
+        .dot.active { background: var(--accent-primary); opacity: 1; transform: scale(1.2); }
+        .nav-btn {
+            background: var(--glass-surface); border: 1px solid var(--glass-border);
+            color: var(--text-primary); padding: 10px 20px; border-radius: 30px;
+            cursor: pointer; font-size: 0.9rem; backdrop-filter: blur(10px);
+            transition: var(--transition-smooth);
+        }
+        .nav-btn:hover { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+
+        /* --- TABLE OF CONTENTS OVERLAY --- */
+        .toc-overlay {
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
+            background: var(--bg-base); border-left: 1px solid var(--glass-border);
+            z-index: 200; padding: 80px 20px 20px;
+            transition: right 0.4s ease; overflow-y: auto;
+        }
+        .toc-overlay.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        .toc-item {
+            padding: 12px; border-radius: 8px; cursor: pointer; color: var(--text-secondary);
+            transition: 0.2s; font-size: 0.9rem;
+        }
+        .toc-item:hover, .toc-item.active { background: var(--glass-highlight); color: var(--accent-primary); }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .slide { padding: 80px 16px 90px; align-items: flex-start; }
+            .glass-card { padding: 24px; max-height: none; height: auto; overflow: visible; padding-bottom: 40px; }
+            .slide-content-wrapper { grid-template-columns: 1fr; gap: 24px; }
+            .col-visual { display: none; /* Hide complex visuals on mobile to save space */ }
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 1.75rem; }
+            .stat-grid { grid-template-columns: 1fr; }
+            .price-table { font-size: 0.8rem; }
+            .fixed-copyright { display: none; } /* Hide fixed copyright on mobile, use footer */
+            .logo-img { height: 32px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg"></div>
+
+    <header class="app-header">
+        <div class="header-left">
+            <img src="logo.png" alt="The Digital Campus" class="logo-img" onerror="this.style.display='none'; document.getElementById('fallback-text').style.display='block'">
+            <span id="fallback-text" style="display:none; font-weight:700;">The Digital Campus</span>
+        </div>
+        <div class="header-controls">
+            <button class="icon-btn" id="theme-toggle" aria-label="Toggle Theme">
+                <svg class="sun-icon" viewBox="0 0 24 24" style="display:none"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+            </button>
+            <button class="icon-btn" id="menu-toggle" aria-label="Menu">
+                <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="fixed-copyright">
+        © The Digital Campus 2026
+    </div>
+
+    <nav class="toc-overlay" id="toc">
+        <h4 style="margin-bottom: 20px;">Slides</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main class="deck-container" id="deck">
+
+        <section class="slide active" data-title="Intro">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <span class="pill">© The Digital Campus 2026</span>
+                        <h1>Performance Media Engineered for Scale</h1>
+                        <p style="font-size: 1.25rem;">Meta & TikTok Expertise Built Into Every Campaign.</p>
+                    </div>
+                    <div class="col-visual">
+                        <div class="visual-circle"></div>
+                        <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-accent); z-index: 2;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="The Landscape">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <h4>Market Reality</h4>
+                        <h2>The Media Buying Landscape Today</h2>
+                        <ul>
+                            <li><strong>Attention is Expensive:</strong> Reaching customers costs more every quarter.</li>
+                            <li><strong>Algorithm Updates:</strong> Constant changes leave most agencies behind.</li>
+                            <li><strong>Generic Fails:</strong> Standard buying doesn't scale. You need platform-native expertise.</li>
+                            <li><strong>Silent Waste:</strong> Without rigorous data hygiene, dollars leak unnoticed.</li>
+                        </ul>
+                    </div>
+                    <div class="col-visual">
+                        <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="var(--accent-warn)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="About Us">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <h4>Credibility</h4>
+                        <h2>15 Years of Performance. <br>100+ Brands Scaled.</h2>
+                        <p>We lead the performance media space across Kuwait and the Middle East with a proprietary execution framework.</p>
+                        <div class="stat-grid" style="margin-top: 20px;">
+                            <div class="stat-box">
+                                <span class="stat-val">100+</span>
+                                <span class="stat-lbl">Brands Scaled</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-val">15 Yrs</span>
+                                <span class="stat-lbl">Experience</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-visual">
+                         <div class="visual-card-stack">
+                             <div class="v-card">Scale</div>
+                             <div class="v-card">Data</div>
+                             <div class="v-card">ROI</div>
+                         </div>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Proprietary System">
+            <div class="glass-card">
+                <div class="col-full" style="text-align: left;">
+                    <span class="pill">Our OS</span>
+                    <h2>The Performance Loop</h2>
+                    <p>Our proprietary operating system for profitable growth.</p>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+                    <div class="stat-box" style="text-align: left;">
+                        <h3 style="font-size: 1.2rem; color: var(--accent-primary);">1. Signal Capture</h3>
+                        <p style="font-size: 0.9rem;">Meta CAPI + TikTok pixel integration. Clean data from day 1.</p>
+                    </div>
+                    <div class="stat-box" style="text-align: left;">
+                        <h3 style="font-size: 1.2rem; color: var(--accent-secondary);">2. Platform Alignment</h3>
+                        <p style="font-size: 0.9rem;">Bidding strategy matched to algorithm learning. We amplify the AI.</p>
+                    </div>
+                    <div class="stat-box" style="text-align: left;">
+                        <h3 style="font-size: 1.2rem; color: var(--accent-primary);">3. Creative Testing</h3>
+                        <p style="font-size: 0.9rem;">Systematic A/B rotation. Winning creatives compound into scale.</p>
+                    </div>
+                    <div class="stat-box" style="text-align: left;">
+                        <h3 style="font-size: 1.2rem; color: var(--accent-success);">4. Optimization</h3>
+                        <p style="font-size: 0.9rem;">Hourly monitoring & dynamic budget reallocation.</p>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Meta Mastery">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <span class="pill" style="border-color: #1877F2; color: #1877F2; background: rgba(24, 119, 242, 0.1);">Meta Ads</span>
+                        <h2>Precision Meets Scale</h2>
+                        <ul>
+                            <li><strong>Audience Insights:</strong> Pixel data + 1st-party CRM integration.</li>
+                            <li><strong>Learning Phase:</strong> Strategic spend for 50+ daily events.</li>
+                            <li><strong>Creative Hierarchy:</strong> UGC → Brand-safe → Experimental.</li>
+                            <li><strong>CAPI Tracking:</strong> Server-side tracking beats iOS privacy issues.</li>
+                        </ul>
+                    </div>
+                    <div class="col-visual">
+                        <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="#1877F2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="TikTok Mastery">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <span class="pill" style="border-color: #ff0050; color: #ff0050; background: rgba(255, 0, 80, 0.1);">TikTok Ads</span>
+                        <h2>Virality Meets ROI</h2>
+                        <ul>
+                            <li><strong>Algorithm Alignment:</strong> Broad targeting allows AI to find buyers.</li>
+                            <li><strong>Creative-First:</strong> Ads that look like organic content win.</li>
+                            <li><strong>Budget Scaling:</strong> Increase spend without efficiency decay.</li>
+                            <li><strong>Cultural Resonance:</strong> Localized geo-targeting & dayparting.</li>
+                        </ul>
+                    </div>
+                    <div class="col-visual">
+                        <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18V5l12-2v13" style="stroke: #00f2ea;"></path>
+                            <circle cx="5.5" cy="17.5" r="2.5" style="stroke: #ff0050;"></circle>
+                            <circle cx="17.5" cy="15.5" r="2.5" style="stroke: #ff0050;"></circle>
+                        </svg>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Data Setup">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <h4>Invisible Advantage</h4>
+                        <h2>Data Architecture</h2>
+                        <p>Poor data kills good campaigns. We engineer signal quality.</p>
+                        <ul>
+                            <li><strong>Pixel + API:</strong> CAPI & TikTok SDK integration.</li>
+                            <li><strong>Quality Assurance:</strong> Daily checks & duplicate detection.</li>
+                            <li><strong>Funnel Visibility:</strong> No blind spots from impression to sale.</li>
+                            <li><strong>LTV Calculation:</strong> Cohort analysis guides spend.</li>
+                        </ul>
+                    </div>
+                    <div class="col-visual">
+                        <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="var(--accent-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Case Study: Marketplace">
+            <div class="glass-card">
+                <div class="col-full" style="text-align: left; margin-bottom: 20px;">
+                    <span class="pill">Case Study</span>
+                    <h2>Hyper-Niche Marketplace</h2>
+                </div>
+                <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px;">
+                    <div class="stat-box">
+                        <span class="stat-val" style="color:var(--accent-success)">$3M</span>
+                        <span class="stat-lbl">Revenue</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-val">10X</span>
+                        <span class="stat-lbl">ROAS</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-val">25%</span>
+                        <span class="stat-lbl">Repeat Rate</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-val">3 Yrs</span>
+                        <span class="stat-lbl">Consistency</span>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+                    <h4 style="color: var(--text-accent);">The Strategy</h4>
+                    <p style="margin: 0;">Localized creative hierarchy + layered cultural targeting matched to global timezones. We turned a small addressable market into a high-LTV engine.</p>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Differentiation">
+            <div class="glass-card">
+                <h2>Why Leading Brands Trust Us</h2>
+                <div class="slide-content-wrapper" style="align-items: flex-start;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 24px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h4 style="color: var(--text-secondary);">Generic Agencies</h4>
+                        <ul style="opacity: 0.7;">
+                            <li style="color: var(--text-secondary);">Generalist teams</li>
+                            <li style="color: var(--text-secondary);">Weekly reports</li>
+                            <li style="color: var(--text-secondary);">One platform focus</li>
+                            <li style="color: var(--text-secondary);">Fixed fees</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(56, 189, 248, 0.1); padding: 24px; border-radius: 16px; border: 1px solid var(--accent-primary);">
+                        <h4 style="color: var(--accent-primary);">The Digital Campus</h4>
+                        <ul>
+                            <li>Platform specialists (Meta/TikTok)</li>
+                            <li>Real-time dashboards (24/7)</li>
+                            <li>Algorithmic optimization</li>
+                            <li><strong>Performance-aligned fees</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Onboarding">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <h2>Zero to Live in 10 Days</h2>
+                        <ul class="process-list">
+                            <li><strong>Day 1-4:</strong> Account Creation (Meta, TikTok, Google)</li>
+                            <li><strong>Day 4-7:</strong> Pixel & API Integration (Server-side)</li>
+                            <li><strong>Day 7-9:</strong> Payment & Billing Compliance</li>
+                            <li><strong>Day 10:</strong> First Campaign Live</li>
+                        </ul>
+                    </div>
+                    <div class="col-visual">
+                         <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-primary);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Pricing">
+            <div class="glass-card">
+                <h2>Aligned Economics</h2>
+                <p>We win when you win. Our pricing maximizes your ROI.</p>
+                
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Base Fee</th>
+                            <th>Ad Budget Limit</th>
+                            <th>Performance Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Essentials</strong></td>
+                            <td>KWD 500</td>
+                            <td>Up to KWD 2k</td>
+                            <td>15% above 2k</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--accent-primary);"><strong>Growth</strong></td>
+                            <td>KWD 750</td>
+                            <td>Up to KWD 3k</td>
+                            <td>15% above 3k</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Enterprise</strong></td>
+                            <td>KWD 1,000</td>
+                            <td>KWD 4,000+</td>
+                            <td>15% above 4k</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="font-size: 0.9rem; margin-top: 20px; opacity: 0.7;">Additional services: Creative production & Video available.</p>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Results">
+            <div class="glass-card">
+                <h2 style="text-align: center; margin-bottom: 40px;">Proven Results</h2>
+                <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-box">
+                        <span class="stat-val" style="color: var(--accent-warn);">7.5X</span>
+                        <span class="stat-lbl">ROAS</span>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">E-Commerce Brand</p>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-val" style="color: var(--accent-success);">$1.2M</span>
+                        <span class="stat-lbl">Revenue</span>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">From $150k Spend</p>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-val" style="color: var(--accent-primary);">$85</span>
+                        <span class="stat-lbl">CPA</span>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">Down from $145</p>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Contact">
+            <div class="glass-card" style="text-align: center; align-items: center; justify-content: center;">
+                <h2 style="font-size: 3rem; margin-bottom: 10px;">Ready to Scale?</h2>
+                <p style="font-size: 1.5rem; color: var(--text-accent);">Let's build your performance engine.</p>
+                
+                <div style="margin-top: 40px; display: inline-block; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 20px;">
+                    <p><strong>📧 Email:</strong> admin@thedc.me</p>
+                    <p><strong>📱 WhatsApp:</strong> +965 5599 4099</p>
+                    <p><strong>🌐 Web:</strong> www.thedc.me</p>
+                    <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">Sharq, Kuwait | Dar AlAwadhi Tower</p>
+                    <p style="margin-top: 20px; font-size: 0.8rem; text-align: center; opacity: 0.5;">© The Digital Campus 2026</p>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="nav-footer">
+        <button class="nav-btn" id="prev-btn">←</button>
+        <div class="progress-dots" id="dots-container"></div>
+        <button class="nav-btn" id="next-btn">→</button>
+    </footer>
+
+    <script>
+        // --- LOGIC: Slides, Navigation, Theme ---
+        
+        const slides = document.querySelectorAll('.slide');
+        const dotsContainer = document.getElementById('dots-container');
+        const tocList = document.getElementById('toc-list');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        // 1. Initialize Navigation (Dots & TOC)
+        slides.forEach((slide, index) => {
+            // Dots
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            if (index === 0) dot.classList.add('active');
+            dotsContainer.appendChild(dot);
+            
+            // TOC
+            const title = slide.getAttribute('data-title') || `Slide ${index + 1}`;
+            const tocItem = document.createElement('div');
+            tocItem.classList.add('toc-item');
+            tocItem.innerText = `${index + 1}. ${title}`;
+            tocItem.onclick = () => {
+                goToSlide(index);
+                toggleMenu(); // Close menu on click
+            };
+            tocList.appendChild(tocItem);
+        });
+
+        const dots = document.querySelectorAll('.dot');
+        const tocItems = document.querySelectorAll('.toc-item');
+
+        // 2. Navigation Functions
+        function goToSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            
+            // Remove active classes
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            tocItems[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            
+            // Add active classes
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+            tocItems[currentSlide].classList.add('active');
+        }
+
+        prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+        nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+        // Keyboard Nav
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') goToSlide(currentSlide + 1);
+            if (e.key === 'ArrowLeft') goToSlide(currentSlide - 1);
+        });
+
+        // Touch Swipe Logic
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) goToSlide(currentSlide + 1); // Swipe Left
+            if (touchEndX > touchStartX + 50) goToSlide(currentSlide - 1); // Swipe Right
+        }
+
+        // 3. Theme Toggle Logic
+        const themeBtn = document.getElementById('theme-toggle');
+        const sunIcon = document.querySelector('.sun-icon');
+        const moonIcon = document.querySelector('.moon-icon');
+        
+        // Check local storage or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'light') {
+            document.body.setAttribute('data-theme', 'light');
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            // Default to dark
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+        });
+
+        // 4. Menu Toggle
+        const menuBtn = document.getElementById('menu-toggle');
+        const toc = document.getElementById('toc');
+        
+        function toggleMenu() {
+            toc.classList.toggle('open');
+        }
+        
+        menuBtn.addEventListener('click', toggleMenu);
+
+        // Click outside menu to close
+        document.addEventListener('click', (e) => {
+            if (!toc.contains(e.target) && !menuBtn.contains(e.target) && toc.classList.contains('open')) {
+                toggleMenu();
+            }
+        });
+
+    </script>
+</body>
+</html>
