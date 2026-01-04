@@ -30,6 +30,7 @@
             --accent-secondary: #818cf8; /* Indigo */
             --accent-success: #34d399;
             --accent-warn: #fbbf24;
+            --accent-purple: #a78bfa;
 
             --radius-lg: 24px;
             --radius-md: 16px;
@@ -54,6 +55,7 @@
             --text-secondary: #475569;
             --text-accent: #0284c7;
             --accent-primary: #0284c7;
+            --accent-purple: #7c3aed;
         }
 
         /* --- GLOBAL RESET --- */
@@ -198,19 +200,11 @@
         /* --- DESKTOP ZOOM LOGIC --- */
         @media (min-width: 1024px) {
             .glass-card {
-                /* The Request: 122% Zoom */
+                /* 122% Zoom */
                 transform: scale(1.22);
-                
-                /* Compensation: 
-                   If we scale 1.22, a 100% width card becomes 122% wide (overflow).
-                   We reduce base width to ~65-70% so 70 * 1.4 = ~98% of screen.
-                */
+                /* Compensate Width */
                 width: 70%; 
-                
-                /* Compensation:
-                   Prevent vertical clipping. 
-                   60vh * 1.4 = 84vh visual height, leaving room for header/footer.
-                */
+                /* Compensate Height */
                 max-height: 60vh;
             }
         }
@@ -295,6 +289,16 @@
         .v-card:nth-child(2) { transform: rotate(0deg); z-index: 2; background: rgba(56, 189, 248, 0.1); color: var(--accent-primary); border-color: var(--accent-primary); }
         .v-card:nth-child(3) { transform: rotate(5deg) translateY(10px); z-index: 3; }
 
+        .screenshot-frame {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+        .screenshot-frame:hover { transform: scale(1.02); }
+
         /* --- NAVIGATION FOOTER --- */
         .nav-footer {
             position: fixed; bottom: 20px; left: 0; right: 0;
@@ -349,7 +353,7 @@
             }
 
             .slide-content-wrapper { grid-template-columns: 1fr; gap: 24px; }
-            .col-visual { display: none; }
+            .col-visual { display: block; margin-top: 20px; } /* Show images on mobile now */
             
             /* Typography Scale */
             h1 { font-size: 2.25rem; }
@@ -486,6 +490,24 @@
                     <div class="stat-box" style="text-align: left;">
                         <h3 style="font-size: 1.2rem; color: var(--accent-success);">4. Optimization</h3>
                         <p style="font-size: 0.9rem;">Hourly monitoring & dynamic budget reallocation.</p>
+                    </div>
+                </div>
+                <img src="logo.png" class="slide-watermark" alt="">
+            </div>
+        </section>
+
+        <section class="slide" data-title="Creative AI">
+            <div class="glass-card">
+                <div class="slide-content-wrapper">
+                    <div class="col-text">
+                        <span class="pill" style="border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(139, 92, 246, 0.1);">Proprietary Tech</span>
+                        <h2>Proprietary Creative Intelligence</h2>
+                        <p>Our proprietary AI evaluates ad creatives before launch.</p>
+                        <p style="font-size: 0.95rem; opacity: 0.8;">It analyzes videos and images against platform-specific performance signals—hook strength, clarity, engagement dynamics, native fit, and conversion readiness—to predict CPM, CTR, CPC, CPA, and ROI ranges across Meta, TikTok, YouTube, Snapchat, and X.</p>
+                        <p style="font-size: 0.95rem; margin-top: 10px; color: var(--text-primary);"><strong>The Result:</strong> Eliminate weak creatives early, optimize winners before scaling, and deploy budget with measurable performance confidence.</p>
+                    </div>
+                    <div class="col-visual">
+                         <img src="creativescore.png" alt="CreativeScore AI Dashboard" class="screenshot-frame" onerror="this.style.display='none'">
                     </div>
                 </div>
                 <img src="logo.png" class="slide-watermark" alt="">
@@ -668,9 +690,9 @@
                         </tr>
                         <tr>
                             <td><strong>Enterprise</strong></td>
-                            <td>KWD 1,000</td>
-                            <td>KWD 4,000+</td>
-                            <td>15% above 4k</td>
+                            <td style="color: var(--accent-primary); font-weight: bold;">11% of Total Spend</td>
+                            <td>Unlimited</td>
+                            <td>Included</td>
                         </tr>
                     </tbody>
                 </table>
